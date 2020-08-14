@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 import os
 import random
 import sys
@@ -7,9 +8,10 @@ import socket
 import hashlib
 import tqdm
 import psutil
+import time
 
 NODE_PORT = 23333
-CHUNKS_SIZE = 2048
+CHUNKS_SIZE = 40960
 SERVICE_TYPE_NAME = "_ishare._udp.local."
 
 
@@ -192,9 +194,12 @@ try:
                 data, addr = s.recvfrom(10)
 
             s.sendto(b"**stdin**", addr)
+            time.sleep(0.01)
+
             while True:
                 temp = sys.stdin.buffer.read(CHUNKS_SIZE)
                 s.sendto(temp, addr)
+                time.sleep(0.01)
                 if len(temp) < CHUNKS_SIZE:
                     break
 
@@ -222,16 +227,21 @@ try:
 
             try:
                 s.sendto(bytes(sys.argv[1], encoding="UTF-8"), addr)
+                time.sleep(0.01)
                 s.sendto(bytes(str(os.path.getsize(sys.argv[1])), encoding="UTF-8"), addr)
+                time.sleep(0.01)
                 s.sendto(bytes(md5(sys.argv[1]), encoding="UTF-8"), addr)
+                time.sleep(0.01)
 
                 with open(sys.argv[1], "rb") as file:
                     while True:
                         data = file.read(CHUNKS_SIZE)
                         s.sendto(data, addr)
+                        time.sleep(0.01)
                         if len(data) < CHUNKS_SIZE:
                             break
-            except OSError:
+            except OSError as e:
+                print(e)
                 print("Cannot open file " + sys.argv[1])
                 exit(1)
 

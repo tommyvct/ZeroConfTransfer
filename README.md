@@ -48,13 +48,26 @@ Done.
 
 ## Current Limitation
 1. Cannot transfer folder.
-2. Cannot transfer large files (>10MB) will corrupt.
-3. Cannot transfer video and audio files, file will corrupt.
-4. zip, 7z, picture, binary files will have a high chance of corruption.
-5. Non UTF-8 file will be unreadable.
-6. It will crash if transferring string (pass from `stdin`) AND the program cannot figure out by itself which IP address to use.
+2. Non UTF-8 file will be unreadable.
+3. It will crash if transferring string (pass from `stdin`) AND the program cannot figure out by itself which IP address to use.
 
-Small files like DOCX, PDF and plain text files will work just fine.
+Corruption or hang are most likely caused by missing packets and desynchronization caused by the nature of UDP.
+UDP guarantee neither the proper delivery nor the order the packet. This can be greatly reduced by introduce a short delay after each packet is sent.
+
+According to https://stackoverflow.com/questions/22819214/udp-message-too-long, by standard, the packet payload size should not exceed the MTU for that network interface. But for the sake of simplicity and I'm running out of time, only one thread is used, and the packet payload size is abused to `40960`. 
+
+The outbounding transfer will fail for macOS and maybe other OSs, because they have a predetermined limit on the size of a UDP packet:
+```
+OSError: [Errno 40] Message too long
+```
+This could be overridden on macos:
+```
+sudo sysctl -w net.inet.udp.maxdgram=65535
+```
+where `65535` is the absolute maximum size of a UDP packet.
+
+This explains why transfer large files from Windows to macOS works just fine, while from macOS to something will have checksum mismatch or fail.
+
 
 ## Implementation details
 The program have 3 states, transmitting string, transmitting file, and receiving.
