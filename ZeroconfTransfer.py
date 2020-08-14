@@ -21,6 +21,7 @@ def get_ip_list(hint: str = "") -> tuple:
         temp = []
 
         for a in ip:
+            # https://www.oreilly.com/library/view/regular-expressions-cookbook/9780596802837/ch07s16.html
             if re.search("^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", a.address) and a.address != "127.0.0.1":
                 if hint == "":
                     temp.append(a.address)
